@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = [
+    "main/task-queue/core",
+    "main/task-queue/spi/*",
+    "main/task-queue/saf",
+]

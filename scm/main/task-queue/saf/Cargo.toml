@@ -1,0 +1,45 @@
+[package]
+name         = "task-queue-svc-saf"
+version      = "0.1.0"
+edition      = "2021"
+license      = "MIT OR Apache-2.0"
+authors      = ["SWE Engineering Labs"]
+repository   = "https://github.com/sweengineeringlabs/task-queue-svc"
+rust-version = "1.98"
+description  = "task-queue-svc SAF: construction factories for the in-memory/NATS/Kafka TaskQueue backends. Split out of message-broker-svc-saf (SRP)."
+keywords     = ["task-queue", "saf", "async", "swe"]
+categories   = ["network-programming", "asynchronous"]
+
+[package.metadata.arch]
+application_type = "facade"
+service_type     = "task-queue"
+
+[lib]
+name = "task_queue_svc_saf"
+path = "src/lib.rs"
+
+[features]
+default  = []
+inmemory = ["dep:task-queue-svc-core"]
+nats     = ["dep:task-queue-svc-nats-spi"]
+kafka    = ["dep:task-queue-svc-kafka-spi"]
+
+[dependencies]
+task-queue-pattern      = { git = "https://github.com/sweengineeringlabs/task-queue-pattern.git", tag = "v0.1.0" }
+task-queue-svc-core     = { path = "../core", version = "0.1.0", optional = true }
+task-queue-svc-nats-spi = { path = "../spi/nats-spi", version = "0.1.0", optional = true }
+task-queue-svc-kafka-spi = { path = "../spi/kafka-spi", version = "0.1.0", optional = true }
+futures = "0.3"
+
+[dev-dependencies]
+tokio   = { version = "1.52", features = ["rt-multi-thread", "macros"] }
+futures = "0.3"
+bytes   = "1"
+
+[lints.rust]
+unsafe_code  = "deny"
+missing_docs = "warn"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
