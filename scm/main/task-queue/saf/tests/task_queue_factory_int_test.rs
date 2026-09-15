@@ -10,6 +10,7 @@
 #[cfg(feature = "inmemory")]
 #[tokio::test]
 async fn test_in_memory_returns_a_working_queue() {
+    use task_queue_pattern::TaskQueue;
     use task_queue_svc_saf::TaskQueueFactory;
 
     let queue = TaskQueueFactory::in_memory();
@@ -24,7 +25,7 @@ async fn test_in_memory_returns_a_working_queue() {
 #[cfg(feature = "inmemory")]
 #[tokio::test]
 async fn test_in_memory_enqueue_dequeue_round_trip() {
-    use task_queue_pattern::Task;
+    use task_queue_pattern::{Task, TaskQueue};
     use task_queue_svc_saf::TaskQueueFactory;
 
     let queue = TaskQueueFactory::in_memory();

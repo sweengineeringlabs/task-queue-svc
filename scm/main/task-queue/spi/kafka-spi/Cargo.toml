@@ -1,6 +1,6 @@
 [package]
 name         = "task-queue-svc-kafka-spi"
-version      = "0.1.0"
+version      = "0.2.0"
 edition      = "2021"
 license      = "MIT OR Apache-2.0"
 authors      = ["SWE Engineering Labs"]
@@ -19,7 +19,7 @@ name = "task_queue_svc_kafka_spi"
 path = "src/lib.rs"
 
 [dependencies]
-task-queue-pattern = { git = "https://github.com/sweengineeringlabs/task-queue-pattern.git", tag = "v0.1.0" }
+task-queue-pattern = { git = "https://github.com/sweengineeringlabs/task-queue-pattern.git", tag = "v0.2.0" }
 futures              = "0.3"
 tokio                = { version = "1.52", features = ["sync", "rt", "time"] }
 rdkafka              = { version = "0.39", features = ["tokio", "cmake-build"] }

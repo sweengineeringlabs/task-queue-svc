@@ -1,6 +1,6 @@
 [package]
 name         = "task-queue-svc-saf"
-version      = "0.1.0"
+version      = "0.2.0"
 edition      = "2021"
 license      = "MIT OR Apache-2.0"
 authors      = ["SWE Engineering Labs"]
@@ -25,10 +25,10 @@ nats     = ["dep:task-queue-svc-nats-spi"]
 kafka    = ["dep:task-queue-svc-kafka-spi"]
 
 [dependencies]
-task-queue-pattern      = { git = "https://github.com/sweengineeringlabs/task-queue-pattern.git", tag = "v0.1.0" }
-task-queue-svc-core     = { path = "../core", version = "0.1.0", optional = true }
-task-queue-svc-nats-spi = { path = "../spi/nats-spi", version = "0.1.0", optional = true }
-task-queue-svc-kafka-spi = { path = "../spi/kafka-spi", version = "0.1.0", optional = true }
+task-queue-pattern      = { git = "https://github.com/sweengineeringlabs/task-queue-pattern.git", tag = "v0.2.0" }
+task-queue-svc-core     = { path = "../core", version = "0.2.0", optional = true }
+task-queue-svc-nats-spi = { path = "../spi/nats-spi", version = "0.2.0", optional = true }
+task-queue-svc-kafka-spi = { path = "../spi/kafka-spi", version = "0.2.0", optional = true }
 futures = "0.3"
 
 [dev-dependencies]

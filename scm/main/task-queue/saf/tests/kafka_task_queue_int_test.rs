@@ -22,7 +22,7 @@ async fn test_kafka_task_queue_factory_constructs_without_network() {
 #[cfg(feature = "kafka")]
 #[tokio::test]
 async fn test_kafka_task_queue_health_check_fails_for_unreachable_broker() {
-    use task_queue_pattern::QueueError;
+    use task_queue_pattern::{QueueError, TaskQueue};
     use task_queue_svc_saf::TaskQueueFactory;
 
     let queue = TaskQueueFactory::kafka("127.0.0.1:9999", "test-group", "test-topic")
@@ -38,7 +38,7 @@ async fn test_kafka_task_queue_health_check_fails_for_unreachable_broker() {
 #[cfg(feature = "kafka")]
 #[tokio::test]
 async fn test_kafka_task_queue_enqueue_fails_for_unreachable_broker() {
-    use task_queue_pattern::{QueueError, Task};
+    use task_queue_pattern::{QueueError, Task, TaskQueue};
     use task_queue_svc_saf::TaskQueueFactory;
 
     let queue = TaskQueueFactory::kafka("127.0.0.1:9999", "test-group", "test-topic")
@@ -55,6 +55,7 @@ async fn test_kafka_task_queue_enqueue_fails_for_unreachable_broker() {
 #[cfg(feature = "kafka")]
 #[tokio::test]
 async fn test_kafka_task_queue_dequeue_returns_none_when_no_broker() {
+    use task_queue_pattern::TaskQueue;
     use task_queue_svc_saf::TaskQueueFactory;
 
     let queue = TaskQueueFactory::kafka("127.0.0.1:9999", "test-group", "test-topic")
@@ -70,20 +71,20 @@ async fn test_kafka_task_queue_dequeue_returns_none_when_no_broker() {
     }
 }
 
-/// @covers: kafka, in_memory — both return `Box<dyn TaskQueue>`, so a caller
-/// can unify queues picked from different constructors into one `Vec`
-/// without manually boxing any of them itself.
+/// @covers: kafka, in_memory — both return the same concrete `AnyTaskQueue`
+/// type, so a caller can unify queues picked from different constructors
+/// into one `Vec` without any boxing at all (zero-cost static dispatch,
+/// unlike the `Box<dyn TaskQueue>` this replaced).
 ///
 /// `#[tokio::test]`, not a plain `#[test]`: unlike `KafkaMessageBroker::new`
 /// (producer only), `KafkaTaskQueue::new` also builds a `StreamConsumer`,
 /// which requires an active Tokio runtime to construct.
 #[cfg(all(feature = "kafka", feature = "inmemory"))]
 #[tokio::test]
-async fn test_kafka_and_in_memory_constructors_return_the_same_boxed_queue_type() {
-    use task_queue_pattern::TaskQueue;
-    use task_queue_svc_saf::TaskQueueFactory;
+async fn test_kafka_and_in_memory_constructors_return_the_same_queue_type() {
+    use task_queue_svc_saf::{AnyTaskQueue, TaskQueueFactory};
 
-    let queues: Vec<Box<dyn TaskQueue>> = vec![
+    let queues: Vec<AnyTaskQueue> = vec![
         TaskQueueFactory::in_memory(),
         TaskQueueFactory::kafka("127.0.0.1:9999", "test-group", "test-topic")
             .expect("kafka client construction succeeds before first IO"),
@@ -114,7 +115,7 @@ fn require_kafka_brokers() -> String {
 #[ignore = "requires-kafka"]
 async fn test_enqueue_dequeue_ack_roundtrip_with_live_broker() {
     use bytes::Bytes;
-    use task_queue_pattern::Task;
+    use task_queue_pattern::{Task, TaskQueue};
     use task_queue_svc_saf::TaskQueueFactory;
 
     let brokers = require_kafka_brokers();
@@ -161,7 +162,7 @@ async fn test_enqueue_dequeue_ack_roundtrip_with_live_broker() {
 #[ignore = "requires-kafka"]
 async fn test_enqueue_dequeue_nack_redelivers_with_live_broker() {
     use bytes::Bytes;
-    use task_queue_pattern::Task;
+    use task_queue_pattern::{Task, TaskQueue};
     use task_queue_svc_saf::TaskQueueFactory;
 
     let brokers = require_kafka_brokers();
@@ -231,7 +232,7 @@ async fn test_enqueue_dequeue_nack_redelivers_with_live_broker() {
 async fn test_enqueue_dequeue_headers_and_task_id_survive_with_live_broker() {
     use bytes::Bytes;
     use std::collections::HashMap;
-    use task_queue_pattern::Task;
+    use task_queue_pattern::{Task, TaskQueue};
     use task_queue_svc_saf::TaskQueueFactory;
 
     let brokers = require_kafka_brokers();

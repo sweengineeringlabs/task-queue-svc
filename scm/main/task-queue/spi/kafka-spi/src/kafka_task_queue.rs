@@ -1,6 +1,7 @@
 //! [`KafkaTaskQueue`] — Apache Kafka backed competing-consumer task queue.
 
 use std::collections::HashMap;
+use std::future::Future;
 use std::sync::Arc;
 
 use bytes::Bytes;
@@ -160,10 +161,10 @@ impl KafkaTaskQueue {
 }
 
 impl TaskQueue for KafkaTaskQueue {
-    fn enqueue(&self, task: Task) -> BoxFuture<'_, Result<(), QueueError>> {
+    fn enqueue(&self, task: Task) -> impl Future<Output = Result<(), QueueError>> + Send + '_ {
         let topic = self.topic.clone();
         let producer = self.producer.clone();
-        Box::pin(async move {
+        async move {
             let headers = encode_task_headers(task.id, &task.headers);
             producer
                 .send(
@@ -178,12 +179,12 @@ impl TaskQueue for KafkaTaskQueue {
                 .await
                 .map(|_| ())
                 .map_err(|(e, _)| QueueError::Enqueue(e.to_string()))
-        })
+        }
     }
 
-    fn dequeue(&self) -> BoxFuture<'_, Result<Option<TaskHandle>, QueueError>> {
+    fn dequeue(&self) -> impl Future<Output = Result<Option<TaskHandle>, QueueError>> + Send + '_ {
         let consumer = Arc::clone(&self.consumer);
-        Box::pin(async move {
+        async move {
             let recv_result = tokio::time::timeout(
                 std::time::Duration::from_millis(crate::constants::KAFKA_DEQUEUE_POLL_TIMEOUT_MS),
                 consumer.recv(),
@@ -252,12 +253,12 @@ impl TaskQueue for KafkaTaskQueue {
             });
 
             Ok(Some(TaskHandle::new(task_id, payload, headers, ack, nack)))
-        })
+        }
     }
 
-    fn health_check(&self) -> BoxFuture<'_, Result<(), QueueError>> {
+    fn health_check(&self) -> impl Future<Output = Result<(), QueueError>> + Send + '_ {
         let producer = self.producer.clone();
-        Box::pin(async move {
+        async move {
             tokio::task::spawn_blocking(move || {
                 producer
                     .client()
@@ -272,7 +273,7 @@ impl TaskQueue for KafkaTaskQueue {
             })
             .await
             .map_err(|e| QueueError::Connection(format!("health check task failed: {e}")))?
-        })
+        }
     }
 }
 

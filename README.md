@@ -36,7 +36,7 @@ No Postgres backend — `edge-runtime`'s original pilot never had a
 | Document | Description |
 |----------|--------------|
 | [Docs index](docs/README.md) | Full documentation index |
-| [Architecture](docs/3-design/architecture.md) | Component diagram, dispatch table |
+| [Architecture](docs/3-design/architecture.md) | Component diagram, dispatch table, why `AnyTaskQueue` not `Box<dyn TaskQueue>` |
 | [ADR-001](docs/3-design/adr/ADR-001-split-from-message-broker-svc.md) | Why this repo is split from `message-broker-svc` |
 | [Developer Guide](docs/4-development/developer_guide.md) | Repo layout, feature flags |
 

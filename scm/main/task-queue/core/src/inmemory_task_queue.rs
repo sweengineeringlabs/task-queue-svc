@@ -1,5 +1,6 @@
 //! [`InMemoryTaskQueue`] — tokio mpsc channel backed task queue.
 
+use std::future::Future;
 use std::sync::Arc;
 
 use futures::future::BoxFuture;
@@ -38,9 +39,9 @@ impl Default for InMemoryTaskQueue {
 }
 
 impl TaskQueue for InMemoryTaskQueue {
-    fn enqueue(&self, task: Task) -> BoxFuture<'_, Result<(), QueueError>> {
+    fn enqueue(&self, task: Task) -> impl Future<Output = Result<(), QueueError>> + Send + '_ {
         let tx = Arc::clone(&self.tx);
-        Box::pin(async move {
+        async move {
             if task.payload.len() > MAX_TASK_PAYLOAD_BYTES {
                 return Err(QueueError::Enqueue(format!(
                     "payload exceeds maximum size of {MAX_TASK_PAYLOAD_BYTES} bytes"
@@ -49,13 +50,13 @@ impl TaskQueue for InMemoryTaskQueue {
             tx.send(task)
                 .await
                 .map_err(|e| QueueError::Enqueue(e.to_string()))
-        })
+        }
     }
 
-    fn dequeue(&self) -> BoxFuture<'_, Result<Option<TaskHandle>, QueueError>> {
+    fn dequeue(&self) -> impl Future<Output = Result<Option<TaskHandle>, QueueError>> + Send + '_ {
         let rx = Arc::clone(&self.rx);
         let tx = Arc::clone(&self.tx);
-        Box::pin(async move {
+        async move {
             let mut guard = rx.lock().await;
             match guard.recv().await {
                 Some(task) => {
@@ -81,10 +82,10 @@ impl TaskQueue for InMemoryTaskQueue {
                 }
                 None => Ok(None),
             }
-        })
+        }
     }
 
-    fn health_check(&self) -> BoxFuture<'_, Result<(), QueueError>> {
-        Box::pin(async { Ok(()) })
+    async fn health_check(&self) -> Result<(), QueueError> {
+        Ok(())
     }
 }

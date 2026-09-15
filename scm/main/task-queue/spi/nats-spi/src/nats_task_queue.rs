@@ -1,10 +1,10 @@
 //! [`NatsTaskQueue`] — NATS JetStream queue group backed task queue.
 
 use std::collections::HashMap;
+use std::future::Future;
 use std::sync::Arc;
 
 use async_nats::jetstream;
-use futures::future::BoxFuture;
 use tokio::sync::Mutex;
 
 use task_queue_pattern::QueueError;
@@ -156,11 +156,11 @@ impl NatsTaskQueue {
 }
 
 impl TaskQueue for NatsTaskQueue {
-    fn enqueue(&self, task: Task) -> BoxFuture<'_, Result<(), QueueError>> {
+    fn enqueue(&self, task: Task) -> impl Future<Output = Result<(), QueueError>> + Send + '_ {
         let stream_name = self.stream_name.clone();
         let context = self.jetstream_context.clone();
 
-        Box::pin(async move {
+        async move {
             // Encode the task's ID and headers into the JetStream message so
             // `dequeue` can recover the exact ID (and headers) the producer set,
             // instead of a fresh, unrelated ID being minted on receipt.
@@ -176,13 +176,13 @@ impl TaskQueue for NatsTaskQueue {
                 .map_err(|e| QueueError::Enqueue(e.to_string()))?;
 
             Ok(())
-        })
+        }
     }
 
-    fn dequeue(&self) -> BoxFuture<'_, Result<Option<TaskHandle>, QueueError>> {
+    fn dequeue(&self) -> impl Future<Output = Result<Option<TaskHandle>, QueueError>> + Send + '_ {
         let consumer_fut = self.get_or_create_consumer();
 
-        Box::pin(async move {
+        async move {
             let consumer = consumer_fut.await?;
 
             // Pull at most one message with a bounded wait (async-nats FetchBuilder).
@@ -230,18 +230,18 @@ impl TaskQueue for NatsTaskQueue {
 
             // No messages available
             Ok(None)
-        })
+        }
     }
 
-    fn health_check(&self) -> BoxFuture<'_, Result<(), QueueError>> {
+    fn health_check(&self) -> impl Future<Output = Result<(), QueueError>> + Send + '_ {
         let context = self.jetstream_context.clone();
-        Box::pin(async move {
+        async move {
             context
                 .query_account()
                 .await
                 .map_err(|e| QueueError::Connection(e.to_string()))?;
             Ok(())
-        })
+        }
     }
 }
 
