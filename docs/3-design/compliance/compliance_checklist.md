@@ -15,7 +15,7 @@ re-run the listed command after any change and expect the stated result.
 
 | # | Rule | Verify |
 |---|------|--------|
-| 2 | Every `TaskQueueFactory` constructor returns `AnyTaskQueue`, never `Box<dyn TaskQueue>` (`TaskQueue` is not object-safe) | `grep -n "Box<dyn TaskQueue>" main/task-queue/saf/src/*.rs` returns nothing; `grep -n "-> AnyTaskQueue\|Result<AnyTaskQueue" main/task-queue/saf/src/task_queue_factory.rs` shows every constructor's return type |
+| 2 | Every `TaskQueueFactory` constructor returns `AnyTaskQueue`, never `Box<dyn TaskQueue>` (`TaskQueue` is not object-safe) | `grep -n "pub fn \(in_memory\|nats\|kafka\)" -A3 main/task-queue/saf/src/task_queue_factory.rs` shows every constructor's return type is `AnyTaskQueue`/`Result<AnyTaskQueue, ...>`, never `Box<dyn TaskQueue>` |
 | 3 | Regression test exists proving constructors from different backends unify into one `Vec` | `cargo test -p task-queue-svc-saf --features inmemory,kafka test_kafka_and_in_memory_constructors_return_the_same_queue_type` passes |
 
 ## 3. No concrete backend type leaks through `saf`

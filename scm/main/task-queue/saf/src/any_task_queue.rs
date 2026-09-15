@@ -34,6 +34,10 @@ pub enum AnyTaskQueue {
 }
 
 impl TaskQueue for AnyTaskQueue {
+    #[cfg_attr(
+        not(any(feature = "inmemory", feature = "nats", feature = "kafka")),
+        allow(unused_variables)
+    )]
     async fn enqueue(&self, task: Task) -> Result<(), QueueError> {
         match self {
             #[cfg(feature = "inmemory")]
@@ -42,6 +46,8 @@ impl TaskQueue for AnyTaskQueue {
             Self::Nats(q) => q.enqueue(task).await,
             #[cfg(feature = "kafka")]
             Self::Kafka(q) => q.enqueue(task).await,
+            #[cfg(not(any(feature = "inmemory", feature = "nats", feature = "kafka")))]
+            _ => match *self {},
         }
     }
 
@@ -53,6 +59,8 @@ impl TaskQueue for AnyTaskQueue {
             Self::Nats(q) => q.dequeue().await,
             #[cfg(feature = "kafka")]
             Self::Kafka(q) => q.dequeue().await,
+            #[cfg(not(any(feature = "inmemory", feature = "nats", feature = "kafka")))]
+            _ => match *self {},
         }
     }
 
@@ -64,6 +72,8 @@ impl TaskQueue for AnyTaskQueue {
             Self::Nats(q) => q.health_check().await,
             #[cfg(feature = "kafka")]
             Self::Kafka(q) => q.health_check().await,
+            #[cfg(not(any(feature = "inmemory", feature = "nats", feature = "kafka")))]
+            _ => match *self {},
         }
     }
 }

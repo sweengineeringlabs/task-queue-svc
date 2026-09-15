@@ -19,6 +19,7 @@ use task_queue_svc_nats_spi::NatsTaskQueue;
 use task_queue_pattern::QueueError;
 use task_queue_pattern::TaskQueueFactoryContract;
 
+#[cfg(any(feature = "inmemory", feature = "nats", feature = "kafka"))]
 use crate::AnyTaskQueue;
 
 /// Zero-size factory type for constructing task queue instances.
